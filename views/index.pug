@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= title
+  ul#blerp
+  script.
+    const doc = document;
+    const socket = io();
+    socket.on('MESSAGE', (msg) => {
+      const newBlerp = doc.createElement('li');
+      newBlerp.append(msg);
+      ul.appendChild(newBlerp);
+      console.log(msg);
+    });
