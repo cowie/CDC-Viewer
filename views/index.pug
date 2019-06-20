@@ -1,14 +1,12 @@
 extends layout
 
 block content
-  h1= title
+
+  h1= "CDGs CDC TV"
+  .slds-grid.slds-wrap
+    nav.slds-col.slds-size_1-of-1= "Header"
+    main.slds-col.slds-size_1-of-2= "Image"
+    aside.slds-col.slds-size_1-of-2= "Tab"
+    nav.slds-col.slds-size_1-of-1= "Card"
   ul#blerp
-  script.
-    const doc = document;
-    const socket = io();
-    socket.on('MESSAGE', (msg) => {
-      const newBlerp = doc.createElement('li');
-      newBlerp.append(msg);
-      doc.getElementById('blerp').appendChild(newBlerp);
-      console.log(msg);
-    });
+  script(src="/javascripts/base.js")
