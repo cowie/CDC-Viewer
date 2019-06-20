@@ -9,8 +9,10 @@ const doc = document;
       //doc.getElementById('blerp').appendChild(newBlerp);
       console.log(msg);
       newestMsg = msg;
-      processNewEvent(msg);
+      processNewEventSLDS(msg);
 });
+
+
 
 function processNewEvent(event){
     let objectName = event.payload.ChangeEventHeader.entityName;
@@ -18,7 +20,7 @@ function processNewEvent(event){
         eventedObjects.add(objectName, 1);
         //create new tab to hold object, todo.
     }
-    let eventsContainer = doc.getElementById('blerp');
+    let eventsContainer = doc.getElementById('mainContainer');
     
     //build containers
     let txnLI = doc.createElement('li');
@@ -71,4 +73,110 @@ function processNewEvent(event){
     eventDiv.appendChild(eventBody);
     txnLI.appendChild(eventDiv);
     eventsContainer.appendChild(txnLI);
+}
+
+function processNewEventSLDS(event){
+    let objectName = event.payload.ChangeEventHeader.entityName;
+    if(!eventedObjects.get(objectName)!= 1){
+        eventedObjects.add(objectName, 1);
+        //create new tab to hold object, todo.
+    }
+    const eventsContainer = doc.getElementById('mainContainer');
+
+    let newEventMarkup = `
+  <article class="slds-card" data-eventID="${event.event.replayId}">
+  <div class="slds-card__header slds-grid slds-grid_vertical">
+    <header class="slds-media slds-media-center slds-col">
+      <div class="slds-media__figure">
+        <span class="slds-icon_container slds-icon-standard-contact" title="contact">
+            <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact"></use>
+            </svg>
+            <span class="slds-assistive-text">contact</span>
+        </span>
+      </div>
+      <div class="slds-media__body">
+        <h2 class="slds-card__header-title">
+            <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="${event.payload.ChangeEventHeader.entityName}"><span>${event.payload.ChangeEventHeader.entityName}</span></a>
+        </h2>
+      </div>
+      <div class="slds-no-flex">
+      </div>
+    </header>
+    <div class="slds-card__body slds-col">
+      <table class="recordList slds-table slds-table-bordered slds-table_cell-buffer slds-no-row-hover slds-table_bordered slds-table_fixed-layout" role="grid">
+        <thead>
+          <tr class="slds-line-height_reset">
+            <th scope="col">
+              <div class="slds-truncate" title="Records Changed">Records Changed</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>`;
+        //add record ID content
+
+        event.payload.ChangeEventHeader.recordIds.forEach(recordId => {
+            newEventMarkup += `
+            <tr class="slds-hint-parent">
+                <th scope="row">
+                    <div class="slds-truncate" title="${recordId}">
+                        ${recordId}
+                    </div>
+                </th>
+            </tr>`
+        });
+
+        newEventMarkup +=  `
+        </tbody>
+        </table>
+        <table class="fieldList slds-table slds-table-bordered slds-table_cell-buffer slds-no-row-hover slds-table_bordered slds-table_fixed-layout">
+            <thead>
+            <tr class="slds-line-height_reset">
+                <th scope="col">
+                <div class="slds-truncate" title="Field Name">Field Name</div>
+                </th>
+                <th scope="col">
+                <div class="slds-truncate" title="New Value">New Value</div>
+                </th>
+            </tr>
+            </thead>
+            <tbody>`;
+        //add field content
+        //List of field changes
+        let fieldsChanged = Object.keys(event.payload);
+        fieldsChanged.forEach(field => {
+            if(field != 'LastModifiedDate' && field != 'ChangeEventHeader'){
+                newEventMarkup += `
+                    <tr class="slds-hint-parent">
+                        <th scope="row">
+                            <div class="slds-truncate" title="${field}">
+                                ${field}
+                            </div>
+                        </th>
+                        <td role="gridcell">
+                            <div class="slds-truncate" title="${event.payload[field]}">
+                                ${event.payload[field]}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+        newEventMarkup += `
+                </tbody>
+            </table>
+            </div>
+         <footer class="slds-card__footer slds-col">
+                <span>User ID: ${event.payload.ChangeEventHeader.commitUser}</span><br/>
+                <span>Time: ${event.payload.LastModifiedDate}</span>
+         </footer>
+         </div></article>
+         `;
+
+         //<div data-txnID="${event.payload.ChangeEventHeader.transactionKey}">
+         //</div>
+         let txnDiv = doc.createElement('div');
+         txnDiv.setAttribute('data-txnID', event.payload.ChangeEventHeader.transactionKey);
+         txnDiv.innerHTML= newEventMarkup;
+         eventsContainer.appendChild(txnDiv);
 }

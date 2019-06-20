@@ -1,12 +1,15 @@
 extends layout
 
 block content
-
-  h1= "CDGs CDC TV"
   .slds-grid.slds-wrap
-    nav.slds-col.slds-size_1-of-1= "Header"
-    main.slds-col.slds-size_1-of-2= "Image"
-    aside.slds-col.slds-size_1-of-2= "Tab"
-    nav.slds-col.slds-size_1-of-1= "Card"
-  ul#blerp
+    .slds-col.slds-size_1-of-1
+      .slds-page-header
+        .slds-page-header__col-title
+          .slds-media__body
+            .slds-page-header__name
+              .slds-page-header__name-title
+                h1
+                  span.slds-page-header__title.slds-truncate(title="CDGs CDC MTV")= "CDGs CDC MTV"
+    .slds-col.slds-size_1-of-1  
+      #mainContainer
   script(src="/javascripts/base.js")
