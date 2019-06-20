@@ -9,6 +9,6 @@ block content
     socket.on('MESSAGE', (msg) => {
       const newBlerp = doc.createElement('li');
       newBlerp.append(msg);
-      ul.appendChild(newBlerp);
+      doc.getElementById('blerp').appendChild(newBlerp);
       console.log(msg);
     });

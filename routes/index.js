@@ -1,3 +1,4 @@
+'use strict'
 var express = require('express');
 var router = express.Router();
 
@@ -16,23 +17,7 @@ const org = nforce.createConnection({
 
 var fClient;
 
-org.authenticate({username: process.env.SFDCUSERNAME, password: process.env.SFDCPASSWORD}, (err, resp) => {
-  if(err) console.error(err);
-  else if (!err){
-    console.log('sf auth connected');
-    fClient = new faye.Client(`${org.oauth.instance_url}/cometd/45.0/`);
-    //console.log(fClient);
-    const subscription = fClient.subscribe('/data/ChangeEvent', (message) => {
-      console.log('Event detected on ChangeEvent');
-      console.log(message);
-      io.emit('MESSAGE', message);
-    });
-    subscription.then(()=> {
-      console.log('successfully subbed to /data/ChangeEvent');
-    });
-  } 
-  
-});
+
 
 
 
@@ -46,5 +31,30 @@ module.exports = function(io){
   io.on('connection', function(socket){
     console.log('connection made');
   });
+  org.authenticate({username: process.env.SFDCUSERNAME, password: process.env.SFDCPASSWORD}, (err, resp) => {
+    if(err) console.error(err);
+    else if (!err){
+      console.log('sf auth connected');
+      console.log(`${org.oauth.instance_url}/cometd/46.0`);
+      fClient = new faye.Client(`${org.oauth.instance_url}/cometd/46.0`);
+      fClient.setHeader('Authorization', 'OAuth ' + org.oauth.access_token);
+      console.log('fClient connected?');
+      const subscription = fClient.subscribe('/data/ChangeEvents', (message) => {
+        console.log('Event detected');
+        console.log(message);
+        io.emit('MESSAGE', message);
+      });
+      subscription.then(() => {
+        console.log('connected!');
+      })
+      .catch( (err) => {
+        console.error(err);
+      });
+    } 
+    
+  });
+  
   return router;
+
+
 }
