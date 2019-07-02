@@ -75,6 +75,8 @@ function processNewEvent(event){
     eventsContainer.appendChild(txnLI);
 }
 
+
+
 function processNewEventSLDS(event){
     let objectName = event.payload.ChangeEventHeader.entityName;
     if(!eventedObjects.get(objectName)!= 1){
@@ -86,23 +88,7 @@ function processNewEventSLDS(event){
     let newEventMarkup = `
   <article class="slds-card" data-eventID="${event.event.replayId}">
   <div class="slds-card__header slds-grid slds-grid_vertical">
-    <header class="slds-media slds-media-center slds-col">
-      <div class="slds-media__figure">
-        <span class="slds-icon_container slds-icon-standard-contact" title="contact">
-            <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact"></use>
-            </svg>
-            <span class="slds-assistive-text">contact</span>
-        </span>
-      </div>
-      <div class="slds-media__body">
-        <h2 class="slds-card__header-title">
-            <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="${event.payload.ChangeEventHeader.entityName}"><span>${event.payload.ChangeEventHeader.entityName}</span><span>${event.payload.ChangeEventHeader.changeType}</span></a>
-        </h2>
-      </div>
-      <div class="slds-no-flex">
-      </div>
-    </header>
+    ${handleEventHeader(event.payload.ChangeEventHeader.entityName, event.payload.ChangeEventHeader.changeType)}
     <div class="slds-card__body slds-col">
       <table class="recordList slds-table slds-table-bordered slds-table_cell-buffer slds-no-row-hover slds-table_bordered slds-table_fixed-layout" role="grid">
         <thead>
@@ -183,12 +169,6 @@ function handleEventField(fieldName, fieldValue){
                 </th>
             `;
             let valueHTMLContent = `<td role="gridcell"><dl class="slds-list_horizontal slds-wrap">`;
-            /*loop
-                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="First Label">First Label:</dt>
-                        <dd class="slds-item_detail slds-truncate" title="Description for first label">Description for first label</dd>
-                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Second Label">Second Label:</dt>
-                        <dd class="slds-item_detail slds-truncate" title="Description for second label">Description for second label</dd>
-            */
             Object.keys(fieldValue).forEach(subFieldName =>{
                 valueHTMLContent += `
                 <dt class="slds-item_label slds-text-color_weak slds-truncate" title="${subFieldName}">${subFieldName}:</dt>
@@ -218,3 +198,60 @@ function handleEventField(fieldName, fieldValue){
     }
     return returnHTMLContent;
 }
+
+function handleEventHeader(objectName, changeType){
+    let staticHeader = `<header class="slds-media slds-media-center slds-col">`;
+    let staticFooter = `<div class="slds-no-flex"></div></header>`;
+    let imageHTML;
+    objectName;
+
+    if(objectName.indexOf('__c') == -1){
+        //standard object
+        imageHTML = `
+            <div class="slds-media__figure">
+                <span class="slds-icon_container slds-icon-standard-${objectName.toLowerCase()}" title="${objectName}">
+                    <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                        <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#${objectName.toLowerCase()}"></use>
+                    </svg>
+                    <span class="slds-assistive-text">${objectName}</span>
+                </span>
+            </div>`;
+    }else{
+        //custom object
+        imageHTML = `
+            <div class="slds-media__figure">
+                <span class="slds-icon_container slds-icon-custom-custom18" title="${objectName}">
+                    <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                        <use xlink:href="/assets/icons/custom-sprite/svg/symbols.svg#custom18"></use>
+                    </svg>
+                    <span class="slds-assistive-text">${objectName}</span>
+                </span>
+            </div>`;
+    }
+    let titleHTML = `
+            <div class="slds-media__body">
+                <h2 class="slds-card__header-title">
+                    <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="${objectName} - ${changeType}"><span>${objectName} - ${changeType}: # records touched</span></a>
+                </h2>
+            </div>`;
+    return `${staticHeader}${imageHTML}${titleHTML}${staticFooter}`;
+}
+
+/* <header class="slds-media slds-media-center slds-col">
+      <div class="slds-media__figure">
+        <span class="slds-icon_container slds-icon-standard-contact" title="contact">
+            <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact"></use>
+            </svg>
+            <span class="slds-assistive-text">contact</span>
+        </span>
+      </div>
+      <div class="slds-media__body">
+        <h2 class="slds-card__header-title">
+            <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="${event.payload.ChangeEventHeader.entityName} - ${event.payload.ChangeEventHeader.changeType}"><span>${event.payload.ChangeEventHeader.entityName} - ${event.payload.ChangeEventHeader.changeType}: # records touched</span></a>
+        </h2>
+      </div>
+      <div class="slds-no-flex">
+      </div>
+    </header>
+    */
