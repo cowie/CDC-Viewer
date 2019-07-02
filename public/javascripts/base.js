@@ -97,7 +97,7 @@ function processNewEventSLDS(event){
       </div>
       <div class="slds-media__body">
         <h2 class="slds-card__header-title">
-            <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="${event.payload.ChangeEventHeader.entityName}"><span>${event.payload.ChangeEventHeader.entityName}</span></a>
+            <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="${event.payload.ChangeEventHeader.entityName}"><span>${event.payload.ChangeEventHeader.entityName}</span><span>${event.payload.ChangeEventHeader.changeType}</span></a>
         </h2>
       </div>
       <div class="slds-no-flex">
@@ -145,22 +145,7 @@ function processNewEventSLDS(event){
         //List of field changes
         let fieldsChanged = Object.keys(event.payload);
         fieldsChanged.forEach(field => {
-            if(field != 'LastModifiedDate' && field != 'ChangeEventHeader'){
-                newEventMarkup += `
-                    <tr class="slds-hint-parent">
-                        <th scope="row">
-                            <div class="slds-truncate" title="${field}">
-                                ${field}
-                            </div>
-                        </th>
-                        <td role="gridcell">
-                            <div class="slds-truncate" title="${event.payload[field]}">
-                                ${event.payload[field]}
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
+            newEventMarkup += handleEventField(field, event.payload[field]);
         });
         newEventMarkup += `
                 </tbody>
@@ -179,4 +164,57 @@ function processNewEventSLDS(event){
          txnDiv.setAttribute('data-txnID', event.payload.ChangeEventHeader.transactionKey);
          txnDiv.innerHTML= newEventMarkup;
          eventsContainer.appendChild(txnDiv);
+}
+
+function handleEventField(fieldName, fieldValue){
+    //check if special field
+    //todo
+    let returnHTMLContent = '';
+    if(fieldName != 'LastModifiedDate' && fieldName != 'ChangeEventHeader'){
+        let staticStart = '<tr class="slds-hint-parent">';
+        let staticEnd = '</tr>'
+        //check if composite(object) field
+        if(typeof(fieldValue) === 'object'){
+            returnHTMLContent = `
+                <th scope="row">
+                    <div class="slds-truncate" title="${fieldName}">
+                        ${fieldName}
+                    </div>
+                </th>
+            `;
+            let valueHTMLContent = `<td role="gridcell"><dl class="slds-list_horizontal slds-wrap">`;
+            /*loop
+                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="First Label">First Label:</dt>
+                        <dd class="slds-item_detail slds-truncate" title="Description for first label">Description for first label</dd>
+                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Second Label">Second Label:</dt>
+                        <dd class="slds-item_detail slds-truncate" title="Description for second label">Description for second label</dd>
+            */
+            Object.keys(fieldValue).forEach(subFieldName =>{
+                valueHTMLContent += `
+                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="${subFieldName}">${subFieldName}:</dt>
+                <dd class="slds-item_detail slds-truncate" title="${fieldValue[subFieldName]}">${fieldValue[subFieldName]}</dd>
+                `
+            });
+            valueHTMLContent += `</dl></td>`
+            returnHTMLContent += valueHTMLContent;
+        }else if(typeof(fieldValue) === 'string'){
+            //handle standard
+            returnHTMLContent = `
+                            <th scope="row">
+                                <div class="slds-truncate" title="${fieldName}">
+                                    ${fieldName}
+                                </div>
+                            </th>
+                            <td role="gridcell">
+                                <div class="slds-truncate" title="${fieldValue}">
+                                    ${fieldValue}
+                                </div>
+                            </td>
+            `;
+        }else{
+            //quietly hide lol.
+        }
+        returnHTMLContent = `${staticStart}${returnHTMLContent}${staticEnd}`;
+    }
+    return returnHTMLContent;
 }
