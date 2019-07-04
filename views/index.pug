@@ -1,15 +1,50 @@
 extends layout
 
 block content
-  .slds-grid.slds-wrap
-    .slds-col.slds-size_1-of-1
-      .slds-page-header
-        .slds-page-header__col-title
-          .slds-media__body
-            .slds-page-header__name
-              .slds-page-header__name-title
-                h1
-                  span.slds-page-header__title.slds-truncate(title="CDC MTV")= "CDC MTV"
-    .slds-col.slds-size_1-of-1  
-      #mainContainer
+  .slds-tabs_default
+    .slds-grid.slds-wrap
+      .slds-col.slds-size_1-of-1
+        .slds-page-header
+          .slds-page-header__col-title
+            .slds-media__body
+              .slds-page-header__name
+                .slds-page-header__name-title
+                  h1
+                    span.slds-page-header__title.slds-truncate(title="CDC MTV")= "CDC MTV"
+      .slds-col.slds-size_1-of-1
+        ul.slds-tabs_default__nav(role="tablist")
+          li.slds-tabs_default__item.slds-is-active(title="CDC Events", role="presentation")
+            a.slds-tabs_default__link(href="#", onclick="handleTabClick(event);", role="tab", tabindex="0", aria-selected="true", aria-controls="tab-default-1", id="tab-default-1__item")= "CDC Events"
+          li.slds-tabs_default__item(title="Platform Events", role="presentation")
+            a.slds-tabs_default__link(href="#", onclick="handleTabClick(event);", role="tab", tabindex="-1", aria-selected="false", aria-controls="tab-default-2", id="tab-default-2__item")= "Platform Events"
+        #tab-default-1.slds-tabs_default__content.slds-show(role="tabpanel", aria-labelledby="tab-default-1__item")
+          .slds-col.slds-size_1-of-1
+            #cdcContainer
+        #tab-default-2.slds-tabs_default__content.slds-hide(role="tabpanel", aria-labelledby="tab-default-2__item")
+          
+          #peFormArea.slds-grid.slds-wrap.slds-grid_align-space
+            .slds-col.slds-size_1-of-1.slds-p-horizontal_medium
+            .slds-col.slds-size_1-of-3.slds-align-middle
+              .slds-form-element
+              label.slds-form-element__label(for="txtNewPESubscription")="Platform Event Name"
+              .slds-form-element__icon
+                button.slds-button.slds-button_icon(aria-describedby="help", onmouseenter="wakeToolTip(event);", onmouseout="sleepToolTip(event)")
+                  svg.slds-button__icon(aria-hidden="true")
+                    use(xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#info")
+                  span.slds-assistive-text="Help"
+                #help.slds-popover.slds-popover_tooltip.slds-nubbin_bottom-left.slds-fall-into-ground(role="tooltip", style="position:absolute;top:-45px;left:-15px;width:170px;")
+                  .slds-popover__body="API Name should end in '__e'!"
+              .slds-form-element__control
+                input#txtNewPESubscription.slds-input(placeholder="Event Name")
+              button.slds-button.slds-button_brand(onclick="handlePESubmit(event);")="Add Subscription"
+            .slds-col.slds-size_1-of-3.slds-align-middle
+              #subscribedPEList.slds-grid.slds-wrap.slds-grid_align-center.slds-gutters
+                .slds-col.slds-size_1-of-1="Subscribed Channels"
+                each sub in eventSubList
+                  .subscribedPE.slds-col=sub
+            .slds-grid
+              .slds-size_1-of-1
+                #peContainer
+  script(type='text/javascript').
+    const existingEventSubs = "#{eventSubList}";
   script(src="/javascripts/base.js")
