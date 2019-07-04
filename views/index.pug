@@ -5,12 +5,29 @@ block content
     .slds-grid.slds-wrap
       .slds-col.slds-size_1-of-1
         .slds-page-header
-          .slds-page-header__col-title
-            .slds-media__body
-              .slds-page-header__name
-                .slds-page-header__name-title
-                  h1
-                    span.slds-page-header__title.slds-truncate(title="CDC MTV")= "CDC MTV"
+          .slds-page-header__row
+            .slds-page-header__col-title
+              .slds-media
+                .slds-page-header__name
+                  .slds-page-header__name-title
+                    h1
+                      span.slds-page-header__title.slds-truncate(title="CDC MTV")= "CDC MTV"
+              .slds-media__body
+                #connectionStatusZone
+                  #fayeStatus
+                    span.indicatorDefinition="Faye Status:"
+                    #fayeRing.slds-progress-ring.slds-progress-ring_small.blinkingIndicator
+                      .slds-progress-ring__progress(role="progressbar", aria-valuemin="0", aria-valuemax="100", aria-valuenow="100")
+                        svg(viewBox="-1 -1 2 2")
+                          path.slds-progress-ring__path(d="M 1 0 A 1 1 0 1 1 1 -2.4492935982947064e-16 L 0 0")
+                      .slds-progress-ring__content(style="background:#f3f2f2;")
+                  #socketStatus
+                    span.indicatorDefinition="Socket.io Status:"
+                    #socketRing.slds-progress-ring.slds-progress-ring_small.blinkingIndicator
+                      .slds-progress-ring__progress(role="progressbar", aria-valuemin="0", aria-valuemax="100", aria-valuenow="100")
+                        svg(viewBox="-1 -1 2 2")
+                          path.slds-progress-ring__path(d="M 1 0 A 1 1 0 1 1 1 -2.4492935982947064e-16 L 0 0")
+                      .slds-progress-ring__content(style="background:#f3f2f2;")
       .slds-col.slds-size_1-of-1
         ul.slds-tabs_default__nav(role="tablist")
           li.slds-tabs_default__item.slds-is-active(title="CDC Events", role="presentation")
@@ -21,7 +38,22 @@ block content
           .slds-col.slds-size_1-of-1
             #cdcContainer
         #tab-default-2.slds-tabs_default__content.slds-hide(role="tabpanel", aria-labelledby="tab-default-2__item")
-          
+          #peErrorArea(style="height:0px;").slds-notify-container.slds-is-relative.slds-transition-hide
+            .slds-notify.slds-notify_toast.slds-theme_error(role="status")
+              span.slds-assistive-text= "Error"
+              span.slds-icon_container.slds-icon-utility-error.slds-m-right_small.slds-no-flex.slds-align-top(title="Description of icon when needed")
+                svg.slds-icon.slds-icon_small(aria-hidden="true")
+                  use(xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#error")
+              .slds-notify__content
+                h2.slds-text-heading_small="Error Header, This some bigger text than the next bit"
+                p.
+                  "More detail coming here because funsies"
+                  a(href="javascript:void(0);") "oh snap is that a LINK"
+              .slds-notify__close
+                button.slds-button.slds-button_icon.slds-button_icon-inverse(title="Close", onclick="handleToastCloseLink(event);")
+                  svg.slds-button__icon.slds-button__icon_large(aria-hidden="true")
+                    use(xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close")
+                  span.slds-assistive-text= "Close"
           #peFormArea.slds-grid.slds-wrap.slds-grid_align-space
             .slds-col.slds-size_1-of-1.slds-p-horizontal_medium
             .slds-col.slds-size_1-of-3.slds-align-middle
@@ -42,9 +74,10 @@ block content
                 .slds-col.slds-size_1-of-1="Subscribed Channels"
                 each sub in eventSubList
                   .subscribedPE.slds-col=sub
-            .slds-grid
-              .slds-size_1-of-1
-                #peContainer
+          .slds-grid
+            .slds-size_1-of-1
+              #peContainer
+        
   script(type='text/javascript').
     const existingEventSubs = "#{eventSubList}";
   script(src="/javascripts/base.js")

@@ -25,23 +25,22 @@ var allCDCSubscription;
 /* GET home page. */
 router.get('/', function(req, res, next) {
   if(fClient != undefined){
-    console.log('current PESubscriptionList');
-    console.log(PESubscriptionList);
+    console.log('fClient defined, so auth is likely good')
     res.render('index', {eventSubList: Array.from(PESubscriptionList.keys())});
   }else{
-    console.log('fClient');
-    console.log(fClient);
-    //need to auth
+    console.log('fClient not defined, need to auth into SFDC');
     res.redirect('/auth/sfdc');
   }
 });
 
 router.get('/auth/sfdc', (req, res) => {
+  console.log('redirecting to SFDC Oauth page');
   res.redirect(org.getAuthUri());
 });
 
 router.get('/auth/sfdc/callback', (req, res) => {
   if(fClient == undefined){
+    console.log('validating authentication to SFDC');
     org.authenticate({code: req.query.code}, (err, resp) => {
       if(!err) {
         console.log(`Access Token: ${req.access_token} : ${org.oauth.access_token}`);
@@ -57,6 +56,7 @@ router.get('/auth/sfdc/callback', (req, res) => {
         });
         fClient.on('transport:down', () => {
           console.log('transport is down');
+          req.app.io.emit('FayeDisconnect', 'transport:down detected');
         });
         allCDCSubscription.then(() => {
           console.log('connected!');
@@ -70,6 +70,7 @@ router.get('/auth/sfdc/callback', (req, res) => {
     });
   }
   else{
+    console.log('Authentication valid, redirecting to main app');
     res.redirect('/');
   }
   

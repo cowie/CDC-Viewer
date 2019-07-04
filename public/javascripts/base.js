@@ -6,6 +6,11 @@ var newestMsg;
 const doc = document;
 const socket = io();
 
+
+//toastDefinitions
+const customEventToast = 'peErrorArea';
+const cdcToast = 'cdcErrorArea';
+
 //socket.io reactions
 socket.on(cdcTopic, (msg) => {
     console.log(`new message on ${cdcTopic}`);
@@ -25,9 +30,18 @@ socket.on('NewSubSuccess', (payload) => {
 socket.on('NewSubFailure', (payload) => {
     console.log(`Failure connecting to ${payload.topicName}`);
     console.log(payload.error);
+    popToast(customEventToast, `Failure subscribing to ${payload.topicName}`, `${payload.error.code}: ${payload.error.message} - Did you remember __e at the end?`);
 });
-
-
+socket.on('disconnect', (payload) => {
+    console.log('socket disconnected');
+    console.log(payload);
+    setDisconnectStatus('socketStatus');
+});
+socket.on('FayeDisconnect', (payload) => {
+    console.log('Faye dsiconnected');
+    console.log(payload);
+    setDisconnectStatus('fayeStatus');
+})
 //Platform Event Logic
 
 function addPESubscription(peName){
@@ -275,14 +289,12 @@ function handleTabClick(event){
     target.classList.remove('slds-hide');
 }
 function wakeToolTip(event){
-    console.log('waking?');
     let targetTip = document.getElementById(event.currentTarget.getAttribute('aria-describedby'));
     targetTip.classList.add('slds-rise-from-ground');
     targetTip.classList.remove('slds-fall-into-ground');
 }
 
 function sleepToolTip(event){
-    console.log('sleeping?');
     let targetTip = document.getElementById(event.currentTarget.getAttribute('aria-describedby'));
     targetTip.classList.remove('slds-rise-from-ground');
     targetTip.classList.add('slds-fall-into-ground');
@@ -302,6 +314,26 @@ function addTopicToList(topicName){
     newPEItem.classList.add('subscribedPE', 'slds-col');
     newPEItem.textContent= topicName;
     PEList.appendChild(newPEItem);
+}
+
+function popToast(toastTarget, error, subError){
+    let toastContainer = document.getElementById(toastTarget);
+    let errorContainer = toastContainer.firstChild.children[2];
+    errorContainer.children[0].textContent = error;
+    errorContainer.children[1].textContent = subError;
+    toastContainer.classList.add('slds-transition-show');
+    setTimeout(() => {
+        toastContainer.classList.remove('slds-transition-show');
+    }, 5000);
+}
+function handleToastCloseLink(event){
+    let container = event.currentTarget;
+    container.parentElement.parentElement.parentElement.classList.remove('slds-transition-show');
+}
+
+function setDisconnectStatus(targetNotification){
+    let ringIndicator = document.getElementById(targetNotification);
+    ringIndicator.classList.add('slds-progress-ring_expired');
 }
 
 /* Graveyard
