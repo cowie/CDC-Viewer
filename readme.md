@@ -11,6 +11,8 @@ For CDC: What I mean is all the CDC. I didn't add the ability to pick your objec
 
 For Platform Events: There's a form in there that'll let you specify the Platform Event you want to sub to. Make sure you __e that sucker, and use the API name, or it will fail to connect. I even threw a pretty Toast in there for ya. Fun times with SLDS, right?
 
+For EM Realtime Beta: Simply put in the name of the EM log you want to track in the Platform Event tab (such as `UriEventStream`), and it should get picked up! 
+
 Now, I didn't want any of the CDC logic in the client, so we're basically using two different methods to event in real-time. Basically, the dance is such - when you hit index, it'll check the **NForce** object to see if we've got a live org. If not, use **NForce** to quickly redirect to an oAuth page from SF to log in, and authorize the app. Then redirected back to the live feed, newly connected (the redirect URL expected is `/auth/sfdc/callback`, found in *routes/index.js*[13] and routed at *routes/index.js*[35]). At this point, **Faye** will kick off with your token, and set up a subscription to your org's `data/changeEvents` CDC endpoint, which gives you everything.
 
 Now, to get the feed to the clientside, we need to add a server for the client to listen to. I probably coulda created a **Faye** client, but I didn't. Once the **Faye** client is in, we activate a channel in **socket.io** in order to publish to. Once you're redirected to the live index.pug, we activate a client-side **socket.io** subscriber to listen to the messages routed via **Faye** to **socket.io**. 
