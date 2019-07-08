@@ -13,6 +13,8 @@ block content
                     h1
                       span.slds-page-header__title.slds-truncate(title="CDC MTV")= "CDC MTV"
               .slds-media__body
+                #orgInfoZone
+                  p.slds-page-header__name-meta #{userInfo.username}, #{userInfo.urls.custom_domain}
                 #connectionStatusZone
                   #fayeStatus
                     span.indicatorDefinition="Faye Status:"
@@ -28,6 +30,12 @@ block content
                         svg(viewBox="-1 -1 2 2")
                           path.slds-progress-ring__path(d="M 1 0 A 1 1 0 1 1 1 -2.4492935982947064e-16 L 0 0")
                       .slds-progress-ring__content(style="background:#f3f2f2;")
+            .slds-page-header__col-actions
+              .slds-page-header__controls
+                .slds-page-header_control
+                  ul.slds-button-group-list
+                    li
+                      a.slds-button.slds-button_neutral(href="/revoke") Refresh User
       .slds-col.slds-size_1-of-1
         ul.slds-tabs_default__nav(role="tablist")
           li.slds-tabs_default__item.slds-is-active(title="CDC Events", role="presentation")
