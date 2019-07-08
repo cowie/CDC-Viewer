@@ -179,7 +179,7 @@ function handleEventField(fieldName, fieldValue){
         let staticStart = '<tr class="slds-hint-parent">';
         let staticEnd = '</tr>'
         //check if composite(object) field
-        if(typeof(fieldValue) === 'object'){
+        if(typeof(fieldValue) === 'object' && fieldValue != null){
             returnHTMLContent = `
                 <th scope="row">
                     <div class="slds-truncate" title="${fieldName}">
