@@ -23,7 +23,11 @@ Styling? We just downloaded the SLDS package and are using that to make it look 
 
 ## Setup
 
-Get a salesforce org. Create a connected app, and check the box to do OAuth with it. Set the OAuth endpoint to `http://localhost:3000/auth/sfdc/callback`. Keep this window open as you'll need the Key/Secret soon enough, believe it. Wait like 5 minutes. Srs, it's gotta propagate throughout all the servers, really let it breathe.
+Get a salesforce org. Create a connected app, and check the box to do OAuth with it. 
+* Set the OAuth endpoint to `http://localhost:3000/auth/sfdc/callback`. 
+* For OAuth Scopes, select Full for ease. Given that CDC requires VAD for the 'all cdc' stream, figured it's easiest.
+  
+Keep this window open as you'll need the Key/Secret soon enough, believe it. Wait like 5 minutes. Srs, it's gotta propagate throughout all the servers, really let it breathe.
 
 While you're waiting - go into **Setup** and **Change Data Capture**. Activate this for the objects you want to play with. It's dirt simple, seriously. If you want Platform Events, search that in **Setup** and create your event definitions. I did a quick search and didn't see a super easy way to just query for all existing custom events to throw you a bone with a picklist, so just write down yer API name for the event (should end in __e).
 
