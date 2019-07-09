@@ -23,7 +23,7 @@ Styling? We just downloaded the SLDS package and are using that to make it look 
 
 ## Setup
 
-Get a salesforce org. Create a connected app. Set the OAuth endpoint to `http://localhost:3000/auth/sfdc/callback`. Wait like 5 minutes. Srs, it's gotta propagate throughout all the servers, really let it breathe.
+Get a salesforce org. Create a connected app, and check the box to do OAuth with it. Set the OAuth endpoint to `http://localhost:3000/auth/sfdc/callback`. Keep this window open as you'll need the Key/Secret soon enough, believe it. Wait like 5 minutes. Srs, it's gotta propagate throughout all the servers, really let it breathe.
 
 While you're waiting - go into **Setup** and **Change Data Capture**. Activate this for the objects you want to play with. It's dirt simple, seriously. If you want Platform Events, search that in **Setup** and create your event definitions. I did a quick search and didn't see a super easy way to just query for all existing custom events to throw you a bone with a picklist, so just write down yer API name for the event (should end in __e).
 
@@ -45,7 +45,7 @@ Env Vars Of Note to put either in your local .env file, or in Heroku's dashboard
 
 At that point you can go to `http://localhost:PORT` and you'll get redirected to log in. Log in, authorize your app, and you'll be dumped in the index page. At this point you should be able to make changes to the CDC-tracked objects and see all data changes come through. It handles multiple-record changes, and will identify each object type for you as well. 
 
-For Platform Events, hit the Platform Events tab, then pipe in your custom event name. That's it - now it should consume anything that hits that event topic.
+For Platform Events, hit the Platform Events tab, then pipe in your custom event name. That's it - now it should consume anything that hits that event topic. You don't need to refresh or nothing, it'll just add to the page as it goes. There is NO persistance layer here, so don't be amazed when you come back and it's gone or something, this is meant to be entirely point in time. Get what you get, and fun times happen.
 
 ### Heroku Install/Execution
 Supes lazy, will get to this - basically just create an app, push the source, create the env vars, and make sure your Connected App is pointing to your heroku endpoint not localhost and I think you should be good to go. I'm not gonna lie - I don't think this will effectively work with more than one org/user at a time, so don't go too public with it, ya know? 
