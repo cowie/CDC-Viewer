@@ -29,16 +29,17 @@ While you're waiting - go into **Setup** and **Change Data Capture**. Activate t
 
 ### Local Install/Execution:
 
-`git clone this`
+`git clone https://github.com/cowie/CDC-Viewer.git`
+`cd CDC-Viewer`
 `npm install`
 `touch .env`
+`code .` if you're using VSCode.
 
-Env Vars Of Note to put either in your local .env file, or in Heroku's dashboard.
-* CLIENTID / CLIENTSECRET - Standard OAuth things
-* ENVIRONMENT - 'sandbox' or 'production' - hint: if a scratch org, dats a sandbox
+Env Vars Of Note to put either in your local .env file, or in Heroku's dashboard. The format is one variable per line, and the line should literally be `VARNAME=VARVALUE`
+* CLIENTID - Get this from your connected App listing.
+* CLIENTSECRET - Get this from your connected App listing.
+* ENVIRONMENT - 'sandbox' or 'production' - hint: if a scratch org, dats a sandbox, if a dev ed org, dats a production
 * PORT - I like 3000, if on Heroku this'll get auto-set for you.
-
-The format is literally VARNAME=VARVALUE. No other shenanigans needed in the .env file.
 
 `heroku local` - use this, NOT npm start, in order to pick up all them pretty environment variable bits in the .env var. What's that? no Heroku CLI? Come on (wo)man. Get your priorities in order.
 
