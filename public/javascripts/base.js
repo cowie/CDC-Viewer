@@ -64,10 +64,10 @@ function processNewCustomEvent(event){
             <thead>
             <tr class="slds-line-height_reset">
                 <th scope="col">
-                <div class="slds-truncate" title="Field Name">Field Name</div>
+                <div title="Field Name">Field Name</div>
                 </th>
                 <th scope="col">
-                <div class="slds-truncate" title="Value">Value</div>
+                <div title="Value">Value</div>
                 </th>
             </tr>
             </thead>
@@ -124,7 +124,7 @@ function processNewCDCEvent(event){
             newEventMarkup += `
             <tr class="slds-hint-parent">
                 <th scope="row">
-                    <div class="slds-truncate" title="${recordId}">
+                    <div title="${recordId}">
                         ${recordId}
                     </div>
                 </th>
@@ -138,10 +138,10 @@ function processNewCDCEvent(event){
             <thead>
             <tr class="slds-line-height_reset">
                 <th scope="col">
-                <div class="slds-truncate" title="Field Name">Field Name</div>
+                <div title="Field Name">Field Name</div>
                 </th>
                 <th scope="col">
-                <div class="slds-truncate" title="New Value">New Value</div>
+                <div title="New Value">New Value</div>
                 </th>
             </tr>
             </thead>
@@ -182,7 +182,7 @@ function handleEventField(fieldName, fieldValue){
         if(typeof(fieldValue) === 'object' && fieldValue != null){
             returnHTMLContent = `
                 <th scope="row">
-                    <div class="slds-truncate" title="${fieldName}">
+                    <div title="${fieldName}">
                         ${fieldName}
                     </div>
                 </th>
@@ -190,8 +190,8 @@ function handleEventField(fieldName, fieldValue){
             let valueHTMLContent = `<td role="gridcell"><dl class="slds-list_horizontal slds-wrap">`;
             Object.keys(fieldValue).forEach(subFieldName =>{
                 valueHTMLContent += `
-                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="${subFieldName}">${subFieldName}:</dt>
-                <dd class="slds-item_detail slds-truncate" title="${fieldValue[subFieldName]}">${fieldValue[subFieldName]}</dd>
+                <dt class="slds-item_label slds-text-color_weak" title="${subFieldName}">${subFieldName}:</dt>
+                <dd class="slds-item_detail" title="${fieldValue[subFieldName]}">${fieldValue[subFieldName]}</dd>
                 `
             });
             valueHTMLContent += `</dl></td>`
@@ -200,12 +200,12 @@ function handleEventField(fieldName, fieldValue){
             //handle standard
             returnHTMLContent = `
                             <th scope="row">
-                                <div class="slds-truncate" title="${fieldName}">
+                                <div title="${fieldName}">
                                     ${fieldName}
                                 </div>
                             </th>
                             <td role="gridcell">
-                                <div class="slds-truncate" title="${fieldValue}">
+                                <div title="${fieldValue}">
                                     ${fieldValue}
                                 </div>
                             </td>
