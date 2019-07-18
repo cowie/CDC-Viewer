@@ -1,67 +1,111 @@
-# SFDC Simple CDC + Platform Event Viewer
-### Things this is: Open sourced, free
-### Things this isn't: Didn't do extensive disconnect logic, retries, that sort of thing, so it's a baseline to show stuff, but it's not complex. Also probably isn't efficient to go JSFOrce-Faye-Socket, but it was suuuuper easy to set up quickly.
-### Status: Actually it works just fine. Maybe a 5-10m spinup process for localhost. Can push to Heroku too if ya wanted, though I haven't really written it for multiple users/multiple orgs concurrently tbh.
+# Salesforce Event Log + CDC Viewer _(CDC-Viewer)_
 
-## Ramblin's
+[![Salesforce API v46.0](https://img.shields.io/badge/Salesforce%20API-v46.0-blue.svg)]()
+[![Lightning Experience Not Required](https://img.shields.io/badge/Lightning%20Experience-Not%20Required-inactive.svg)]()
+[![User License Platform](https://img.shields.io/badge/User%20License-Platform-032e61.svg)]()
 
-Basically what you have here is a quick node app that will let you consume from Platform Events and CDC.
+> A Salesforce CDC/Platform Event viewer, in SLDS too
 
-For CDC: What I mean is all the CDC. I didn't add the ability to pick your objects, it's simple and just hitting `data/ChangeEvents`, to capture everything and anything.
+This app will give you all you need to see the events being tossed out of your Salesforce org. We're not retaining or storing them, just viewing them in realtime, so it's helpful if testing that events are firing, or if you want to look at the code to see an easy form of consuming them.
 
-For Platform Events: There's a form in there that'll let you specify the Platform Event you want to sub to. Make sure you __e that sucker, and use the API name, or it will fail to connect. I even threw a pretty Toast in there for ya. Fun times with SLDS, right?
+For CDC, we're taking in all the CDC by consuming `data/changeEvents` - so any object you enable, it's consuming. For Platform Events, there's a form in there to specify the events you want to subscribe to. It expects an API name, so it should look like `yoEvent__e` or it'll probably yell at you. For EM Realtime Beta, put in the name of the EM log you want to track as if it were a normal Platform Event topic (ex. `UriEventStream`) and it'll get picked up.
 
-For EM Realtime Beta: Simply put in the name of the EM log you want to track in the Platform Event tab (such as `UriEventStream`), and it should get picked up! 
+## Security and Limitations
+So there are two elements to be aware of here when trying this out and trusting my code, especially if you're attaching this to a production system.
+* For a sub to consume from CDC's firehose, it requires super high permissions, specifically View All Data. That's a lot of trust. I'm not DOING anything with the data in my direct build (cowie/CDC-Viewer) but if someone forks this and does other stuff with it you're opening up a hell of a pandora's box. We're using OAuth to get the access, so you're not providing the code any form of credentials at least.
+* Events are a metered thing in Salesforcia- you have a limit to what you can consume. If you were to flip this on, monitor all the things in a production org, you're going to potentially hit some limits. If you're awesome and already using CDC/PE in your day to day, those integrations may explode. This is a quick tool, don't leave it running please.
 
-Now, I didn't want any of the CDC logic in the client, so we're basically using two different methods to event in real-time. Basically, the dance is such - when you hit index, it'll check the **NForce** object to see if we've got a live org. If not, use **NForce** to quickly redirect to an oAuth page from SF to log in, and authorize the app. Then redirected back to the live feed, newly connected (the redirect URL expected is `/auth/sfdc/callback`, found in *routes/index.js*[13] and routed at *routes/index.js*[35]). At this point, **Faye** will kick off with your token, and set up a subscription to your org's `data/changeEvents` CDC endpoint, which gives you everything.
+## Install
 
-Now, to get the feed to the clientside, we need to add a server for the client to listen to. I probably coulda created a **Faye** client, but I didn't. Once the **Faye** client is in, we activate a channel in **socket.io** in order to publish to. Once you're redirected to the live index.pug, we activate a client-side **socket.io** subscriber to listen to the messages routed via **Faye** to **socket.io**. 
+Before ya start - you will need a few prereq's if you don't have them already.
+* [Git](https://git-scm.com/downloads)
+* [Node.js](https://nodejs.org/en/download/)
+* [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install)
 
-In theory, say you wanted a page that was serving up realtime updates to multiple users, you'd actually want this sorta decoupled 2-step dance. SFDC limits events on messages x subscribers - so 50 people subbing to 50 events is 50x worse than if you had one 'server' subscribing and then pushing out on its own bus to the 50 users. If you wanted to move to that model, basically you just break this into two separate apps, and point the base.js[7] io() command to your real app. Tests real pretty on localhost, just use different ports and you're all set.
+You'll also need to be at least comfy enough with a command line (terminal in mac land) to copy/paste commands.
 
-Styling? We just downloaded the SLDS package and are using that to make it look pretty and Salesforcey.
+### Salesforce Setup
+Get a Salesforce org, either from developer.salesforce.com, trailhead.com, your own sandbox/scratch org, I don't care - just get an org handy.
 
-## Setup
+Click on *Setup*, and in the quick find bar on the left, type in **App Manager** and click on the link. Click *New Connected App*.
 
-Get a salesforce org. Create a connected app, and check the box to do OAuth with it. 
-* Set the OAuth endpoint to `http://localhost:3000/auth/sfdc/callback`. 
-* For OAuth Scopes, select Full for ease. Given that CDC requires VAD for the 'all cdc' stream, figured it's easiest.
-  
-Keep this window open as you'll need the Key/Secret soon enough, believe it. Wait like 5 minutes. Srs, it's gotta propagate throughout all the servers, really let it breathe.
+In the dialog, name it whatever you'd like, and make sure you check the box that says *Enable OAuth Settings*. 
+* Where it says *Callback URL*, put in the value **http://localhost:3000/auth/sfdc/callback**. 
+* Below that, where it says *Selected OAuth Scopes*, just be lazy and select **Full access(full)**. 
+* Leave the rest of the values as defaults and click save. Once you're at the detail page for your app - *keep it open*. You will need some of the stuff on here soon.
 
-While you're waiting - go into **Setup** and **Change Data Capture**. Activate this for the objects you want to play with. It's dirt simple, seriously. If you want Platform Events, search that in **Setup** and create your event definitions. I did a quick search and didn't see a super easy way to just query for all existing custom events to throw you a bone with a picklist, so just write down yer API name for the event (should end in __e).
+#### (Optional) Turn on CDC
+Open a new tab in Salesforce, and go to *Setup*. In the quickfind box, type in **Change Data Capture**, and click on the *Change Data Capture* link. Here you can select the objects you want to track with CDC. Pick the ones you want, leave the ones you don't, and click to confirm.
 
-### Local Install/Execution:
+#### (Optional) Create a Custom Platform Event
+Open a new tab in Salesforce, and go to *Setup*. In the quickfind box, type in **Platform Events**, and click on the *Platform Events* link. Click the button that says *New Platform Event*. Now, making a custom event is very similar to making a custom object, just click through and add the fields you want, and you're good to go. Remember the API name, which ends in `__e`, not `__c`.
 
+### Code Setup
+Now for the fun stuff, pull down all the code from this repository to your local system. Type these commands one by one into your command line/terminal.
 `git clone https://github.com/cowie/CDC-Viewer.git`
+
 `cd CDC-Viewer`
+
 `npm install`
-`touch .env`
-`code .` if you're using VSCode.
 
-Env Vars Of Note to put either in your local .env file, or in Heroku's dashboard. The format is one variable per line, and the line should literally be `VARNAME=VARVALUE`
-* CLIENTID - Get this from your connected App listing.
-* CLIENTSECRET - Get this from your connected App listing.
-* ENVIRONMENT - 'sandbox' or 'production' - hint: if a scratch org, dats a sandbox, if a dev ed org, dats a production
-* PORT - I like 3000, if on Heroku this'll get auto-set for you.
+Now we need to put that connected app information into our app. Thankfully I threw a quick script together to do this easily.
 
-`heroku local` - use this, NOT npm start, in order to pick up all them pretty environment variable bits in the .env var. What's that? no Heroku CLI? Come on (wo)man. Get your priorities in order.
+In your command line (in the CDC-Viewer Directory), type this command into your command line/terminal
 
-At that point you can go to `http://localhost:PORT` and you'll get redirected to log in. Log in, authorize your app, and you'll be dumped in the index page. At this point you should be able to make changes to the CDC-tracked objects and see all data changes come through. It handles multiple-record changes, and will identify each object type for you as well. 
+`sh autoConfig.sh` 
 
-For Platform Events, hit the Platform Events tab, then pipe in your custom event name. That's it - now it should consume anything that hits that event topic. You don't need to refresh or nothing, it'll just add to the page as it goes. There is NO persistance layer here, so don't be amazed when you come back and it's gone or something, this is meant to be entirely point in time. Get what you get, and fun times happen.
+Follow the prompts accordingly, and when it finishes, it should have created a file in there called .env. You might not see it due to Mac/Win hiding 'secret' files like these, so to validate, type this into your command line:
 
-### Heroku Install/Execution
-Supes lazy, will get to this - basically just create an app, push the source, create the env vars, and make sure your Connected App is pointing to your heroku endpoint not localhost and I think you should be good to go. I'm not gonna lie - I don't think this will effectively work with more than one org/user at a time, so don't go too public with it, ya know? 
+`cat .env`
 
-## What would I need to do to make this real?
-I mean really, it *is*, but it is just a quick visualizer, right? You probably need to add retry logic and other elements, but since this is oriented around a client view of the messages flowing through, I imagine it'd be tying the message logic into whatever js you're doing, instead of just creating dom elements. Trigger things on the page, etc. Really float yer boat. That said - be careful here, it's not really...built for like 80 viewers of the same thread. You might want to break this apart if you're building a streaming system against CDC, basically one Heroku App to be what Faye does here and set up a socket.io bit, and then everything hitting that. You can't trust that everyone'll be on the same dyno, so you need to build this right, dig?
+What prints out should look something like the following
+```
+CLIENTID=WellThisIsJustPlainGibberishButItLooksReallyComputeryAndTechnicalItProbablyWorkedWell
+CLIENTSECRET=LessGibberishButStillSoManyRandomDigits
+ENVIRONMENT=production
+PORT=300
+```
+You're now good to move on to usage.
 
-You could probably not use socket if you didn't want to, or swap out JSForce instead of NForce + Faye. That probably isn't the best way, but again - lazy, ya know?
+## Usage
 
-## What can I learn from this sucker?
-Ehh probably not too much, I mean it is what it is.
+Type the following into your command line/terminal:
+`heroku local`
 
-## ToDo / Asks
-* Probably should tab out or something to allow for easier segmentation of different objects/events.
-* Didn't do a TON of Gap/Overflow testing, nor a ton of testing on the small disconnect logic that's in there. 
+This will launch the app for you on your local machine. Once you've done this, just open a browser and go to **localhost:3000**. This should redirect you to a login page for Salesforce - log in with your credentials, and you'll be prompted with an OAuth acceptance page. Click to authorize, and you'll be brought back to the main application.
+
+There are two tabs here, *CDC* and *Platform Events*. *CDC* will have automatically connected to the full `data/ChangeEvents` topic. At this point, leave this page open, go to your org, and Create/Update/Delete any record in Salesforce on the objects you set up for CDC above. You will get a new message on this page at the same time with the details on the change made.
+
+For your custom platform events, or realtime Event Monitoring beta, you need to select the *Platform Events* tab, and type in the API Name of your event topic to track. Probably `my_event__e` or, if one of the Event Monitoring topics, `UriEventStream`. If it's not valid, you'll get the error message bout why. If it is, you'll see it added to the subscription list on the right hand side. From this point, any events fired on a subscribed topic will post here for you. In order to actually create a custom event, I recommend [this trailhead](https://trailhead.salesforce.com/en/content/learn/modules/platform_events_basics) to get started.
+
+## Maintainers
+[Cowie](https://github.com/cowie)
+
+## Thanks
+I'm a fan of all of y'all. Also thanks to folk on the SF Security Specialists team for guiding some requirements for this viewer. Also thanks to [nforce](https://www.npmjs.com/package/nforce) and [Faye](https://faye.jcoglan.com) and [SocketIO](https://socket.io/).
+
+## Contributing
+If you've got something you want tossed in, or errors you're seeing, super cool. Toss issues in the github issues area, and if you'd like, I'm open to PR's. Just hit me up.
+
+## License
+MIT License, so do whatever!
+
+Copyright (c) [2019] [Cowie]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
